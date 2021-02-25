@@ -1,0 +1,192 @@
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+<script>
+    var dados;
+    var ignoretag = new Array();
+    var forcetag = new Array();
+    function filterValue(obj, key, value) {
+        return obj.find(function(v){ return v[key] === value});
+    };
+    
+    function removeItemOnce(arr, value) {
+      var index = arr.indexOf(value);
+      if (index > -1) {
+        arr.splice(index, 1);
+      }
+      return arr;
+    };
+    function isInArray(arr, arrToCheck) {
+       response = true;
+       $.each(arrToCheck, function(i) {
+           if (arr.indexOf(arrToCheck[i]) > -1) {
+               response = true;
+           } else {
+               response = false;
+               return false;
+           };
+       });
+       return response;
+    };
+
+    function notInArray(arr, arrToCheck) {
+       response = true;
+       $.each(arrToCheck, function(i) {
+           if (arr.indexOf(arrToCheck[i]) > -1) {
+               response = false;
+               return false;
+           } else {
+               response = true;
+           };
+       });
+       return response;
+    };
+    function getData() {
+        $.ajax({
+            url: 'https://soudescolado.github.io/ZombicideCharPick/info.json',
+            dataType: 'json',
+            async: false,
+            success: function(data) {
+            dados = data;
+            }
+        });
+        return;
+    };
+    function buildTable(data) {
+        $.each(data.chars, function(i, character) {
+                  var tblRow = "<tr>" + "<td>" + character.name + "</td>" +
+                   "<td>" + filterValue(data.skills,"code",character.blue1).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.yellow1).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.orange1).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.orange2).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.red1).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.red2).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.red3).skillname + "</td>" + 
+                   "<td>" + character.tags.sort().toString() + "</td>" + 
+                   "</tr>"
+                   $(tblRow).appendTo("#chardata");
+                });
+    };
+    function buildTableFilter(data) {
+        $.each(data.chars, function(i, character) {
+            if (
+                (isInArray(character.tags,forcetag) == true && notInArray(character.tags,ignoretag) == true)
+                ) {
+                  var tblRow = "<tr>" + "<td>" + character.name + "</td>" +
+                   "<td>" + filterValue(data.skills,"code",character.blue1).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.yellow1).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.orange1).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.orange2).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.red1).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.red2).skillname + "</td>" + 
+                   "<td>" + filterValue(data.skills,"code",character.red3).skillname + "</td>" + 
+                   "<td>" + character.tags.sort().toString() + "</td>" + 
+                   "</tr>"
+                   $(tblRow).appendTo("#chardata");
+            };
+                });
+    };
+    function getTags(data) {
+        var tagsini = [];
+        $.each(data.chars, function(i, character) {
+            tagsini.push(...character.tags);
+        });
+        var tags = [];
+        tags = unique(tagsini).sort();
+        console.log(tags);
+        var col = 0;
+        var tblTag = "<tr>";
+        $.each(tags, function(i) {
+            col = col + 1
+            tblTag = tblTag + "<td> <input type=\"checkbox\" id=\"" + i + "\" onclick=\"ts(this)\" name =\"" + tags[i] + "\">"
+            tblTag = tblTag + "<label for = \"" + i + "\">" + tags[i] + "</ label>"
+            tblTag = tblTag + "</td>"
+            if (col === 8) {
+                tblTag = tblTag + "</tr><tr>"
+                col = 0
+            };
+        });
+        $(tblTag + "</tr>").appendTo("#taglist tbody");
+    };
+    
+    function unique(list) {
+        var result = [];
+        $.each(list, function(i, e) {
+            if ($.inArray(e, result) == -1) result.push(e);
+        });
+        return result;
+    };
+    function ts(cb) {
+      if (cb.readOnly) {
+          cb.checked=cb.readOnly=false;
+          cb.value = 1;
+          console.log(cb.value);
+          ignoretag.push(cb.name);
+          removeItemOnce(forcetag,cb.name);
+      } else if (!cb.checked) {
+          cb.readOnly=cb.indeterminate=true;
+          cb.value = 2;
+          console.log(cb.value);
+          removeItemOnce(forcetag,cb.name);
+          removeItemOnce(ignoretag,cb.name);
+      } else {
+          cb.value = 3;
+          console.log(cb.value);
+          forcetag.push(cb.name);
+          removeItemOnce(ignoretag,cb.name);
+      };
+      $("#chardata").empty();
+      buildTableFilter(dados);
+      console.log("force");
+      console.log(forcetag);
+      console.log("ignore");
+      console.log(ignoretag);
+    };
+    function initialvalue() {
+        $("input:checkbox").each(function(){
+            this.value = 2;
+            this.readOnly=this.indeterminate=true;
+        });
+    };
+    $(document).ready(function() {
+        getData();
+        buildTable(dados);
+        getTags(dados);
+        initialvalue();
+    });
+
+</script>
+</head>
+
+<body>
+
+<div class="wrapper">
+<div class="profile">
+   <table id="taglist">
+       <tbody>
+       </tbody>
+    </table>
+   <table id= "userdata" border="2">
+  <thead>
+            <th>Name</th>
+            <th>Blue Skill</th>
+            <th>Yellow Skill</th>
+            <th>Orange Skill 1</th>
+            <th>Orange Skill 2</th>
+            <th>Red Skill 1</th>
+            <th>Red Skill 2</th>
+            <th>Red Skill 3</th>
+            <th>Tags</th>
+        </thead>
+      <tbody id="chardata">
+
+      </tbody>
+      <tfoot>
+          
+      </tfoot>
+   </table>
+
+</div>
+</div>
+
+</body>
+</html>
