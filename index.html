@@ -15,31 +15,28 @@
       }
       return arr;
     };
-    function isInArray(arr, arrToCheck) {
+    function isInArray(arr, arrToCheck, yesno) {
        response = true;
        $.each(arrToCheck, function(i) {
            if (arr.indexOf(arrToCheck[i]) > -1) {
+			   if (yesno) {
                response = true;
+			   } else {
+			   response = false;
+			   return false;
+			   };
            } else {
+			   if (yesno) {
                response = false;
                return false;
+			   } else {
+				   response = true;
+			   }
            };
        });
        return response;
     };
 
-    function notInArray(arr, arrToCheck) {
-       response = true;
-       $.each(arrToCheck, function(i) {
-           if (arr.indexOf(arrToCheck[i]) > -1) {
-               response = false;
-               return false;
-           } else {
-               response = true;
-           };
-       });
-       return response;
-    };
     function getData() {
         $.ajax({
             url: 'https://soudescolado.github.io/ZombicideCharPick/info.json',
@@ -69,7 +66,7 @@
     function buildTableFilter(data) {
         $.each(data.chars, function(i, character) {
             if (
-                (isInArray(character.tags,forcetag) == true && notInArray(character.tags,ignoretag) == true)
+                (isInArray(character.tags,forcetag,true) == isInArray(character.tags,ignoretag,false) == true)
                 ) {
                   var tblRow = "<tr>" + "<td>" + character.name + "</td>" +
                    "<td>" + filterValue(data.skills,"code",character.blue1).skillname + "</td>" + 
